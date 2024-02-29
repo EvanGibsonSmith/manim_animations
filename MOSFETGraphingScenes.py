@@ -3,7 +3,7 @@ from manim import *
 class MOSFETGraphs(Scene):
     def construct(self):
         # set parameters
-        kPrimeWL = 1
+        kPrimeWL = 0.1
         Vth = 0.4
         VgsOperatingVoltage = 2 # TODO this does not have dependence on Vds as it actually does yet = 3
         
@@ -309,6 +309,99 @@ class MOSFETGraphsSmallSignal(Scene):
         )
 
         self.wait(4)
+
+# NOTE RELEVEANT SCENES BELOW (will be cleaned up later)
+class BuildMOSFETSymbol(Scene):
+
+    def construct(self):
+        # TODO eventually make objects which changable parameters?
+        gateWire = Line(LEFT, ORIGIN)
+        gateLeftBar = Rectangle(width=0.1, height=1.5, fill_opacity=1).move_to(ORIGIN)
+        gateRightBar = Rectangle(width=0.1, height=1.5, fill_opacity=1).move_to(RIGHT*0.5)
+        sourceWireRight = Line(RIGHT*0.5+DOWN*1.5/4, RIGHT*1+DOWN*1.5/4) # TODO spacing is a bit ugly I think
+        sourceWireDown = Line(RIGHT*1+DOWN*1.5/4, RIGHT*1 + DOWN*1)
+        drainWireRight = Line(RIGHT*0.5+UP*1.5/4, RIGHT*1+UP*1.5/4)
+        drainWireUp = Line(RIGHT*1+UP*1.5/4, RIGHT*1 + UP*1)
+        # technically arrow comes from a line but it has no length and is under the sourceWireRight wire TODO do this a nicer way?
+        # TODO make arrow work
+        sourceArrow = Arrow() # this is NMOS so arrow goes out toward source
+
+        # add labels to the device
+        gateLabel = Text("G", font="Consolas", font_size=30).move_to(LEFT*1.4)
+        drainLabel = Text("D", font="Consolas", font_size=30).move_to(RIGHT*1.4 + UP*1) # TODO make these positions dependent on the wire locations rather than hard coded
+        sourceLabel = Text("S", font="Consolas", font_size=30).move_to(RIGHT*1.4 + DOWN*1)
+        # TODO Make it so writing this group writes source, then gate, then drain
+        NMOSLabels = VGroup(gateLabel, drainLabel, sourceLabel)
+        
+        NMOSCircuitry = VGroup(gateWire, gateLeftBar, gateRightBar, sourceWireRight, sourceWireDown, drainWireRight, drainWireUp)
+
+        NMOSComponent = VGroup(NMOSCircuitry, NMOSLabels)
+        NMOSComponent.scale(0.5).move_to(ORIGIN) 
+
+        # Draw surrounding circuitry info
+        batteryWirePositive = Line(gateWire.get_start()+DOWN, gateWire.get_start()) # TODO When making class add functions like to get points on MOSFETS
+
+        # draw battery VGroup
+        DCBatteryTop = Rectangle(width=1, height=0.07, fill_opacity=1).move_to(UP*0.2)
+        DCBatteryBottom = Rectangle(width=0.8, height=0.07, fill_opacity=1)
+        DCBatteryCircuitry = VGroup(DCBatteryTop, DCBatteryBottom)
+
+        DCBatteryCircuitry.scale(0.5).move_to(batteryWirePositive.get_start()+DOWN*0.1) # TODO this offset is kind of dumb
+
+        # add labels
+        DCBatteryVoltageLabel = Text("Vgs", font="Consolas", font_size=15).move_to(DCBatteryCircuitry.get_left()+LEFT*0.5) # TODO this extra offset is stupid
+        DCBatteryPlus = Text("+", font="Consolas", font_size=15).move_to(DCBatteryVoltageLabel.get_top() + UP*0.3)
+        DCBatteryMinus = Text("-", font="Consolas", font_size=15).move_to(DCBatteryVoltageLabel.get_bottom() + DOWN*0.3)
+        DCBatteryLabels = VGroup(DCBatteryVoltageLabel, DCBatteryPlus, DCBatteryMinus)
+
+        DCBattery = VGroup(DCBatteryCircuitry, DCBatteryLabels)
+        
+        # Draw wire to ground
+        batteryToGround = Line(DCBatteryBottom.get_bottom(), DCBatteryBottom.get_bottom()+DOWN*1)
+
+        # draw ground symbol
+        gateGroundTopRect = Rectangle(width=1, height=0.07, fill_opacity=1)
+        gateGroundMiddleRect = Rectangle(width=0.7, height=0.07, fill_opacity=1).move_to(DOWN*0.2)
+        gateGroundBottomRect = Rectangle(width=0.4, height=0.07, fill_opacity=1).move_to(DOWN*0.4)
+        gateGroundSymbol = VGroup(gateGroundTopRect, gateGroundMiddleRect, gateGroundBottomRect)
+        gateGroundSymbol.scale(0.5).move_to(batteryToGround.get_bottom()+DOWN*0.1) # TODO this offset is kind of unneeded
+    
+
+        # draw power from drain to source
+        powerToSourceWire = Line(drainWireUp.get_end(), drainWireUp.get_end() + UP*1)
+        
+        sourcePower = Rectangle(width=0.5, height=0.035, fill_opacity=1).move_to(powerToSourceWire.get_end())
+        sourcePowerLabel = Text("Vs", font="Consolas", font_size=15).move_to(sourcePower.get_top()+UP*0.2) # TODO offset kind of hard coded
+
+        sourcePowerGroup = VGroup(sourcePower, sourcePowerLabel)
+
+        # source to ground wire 
+        sourceToGroundWire = Line(sourceWireDown.get_end(), sourceWireDown.get_end()+DOWN*1)
+        # get source ground TODO make a ground mobject or something so this isn't duplicated
+        sourceGroundTopRect = Rectangle(width=1, height=0.07, fill_opacity=1)
+        sourceGroundMiddleRect = Rectangle(width=0.7, height=0.07, fill_opacity=1).move_to(DOWN*0.2)
+        sourceGroundBottomRect = Rectangle(width=0.4, height=0.07, fill_opacity=1).move_to(DOWN*0.4)
+        sourceGroundSymbol = VGroup(sourceGroundTopRect, sourceGroundMiddleRect, sourceGroundBottomRect)
+        sourceGroundSymbol.scale(0.5).move_to(sourceToGroundWire.get_end()+DOWN*0.1) # TODO this offset is kind of unneeded
+
+        # wire group to draw
+        wires = VGroup(batteryToGround, batteryWirePositive, powerToSourceWire, sourceToGroundWire)
+
+        # group circuit and center
+        circuitGroup = VGroup(NMOSComponent, DCBattery, gateGroundSymbol, sourceGroundSymbol, sourcePowerGroup, wires)
+        circuitGroup.move_to(ORIGIN)
+
+        # write out circuit
+        self.play(Write(NMOSCircuitry))
+        self.play(Write(NMOSLabels))
+        self.play(Write(DCBatteryCircuitry), Write(DCBatteryLabels))
+        self.play(Write(batteryToGround))
+        self.play(Write(gateGroundSymbol))
+        self.play(Write(sourceGroundSymbol))
+        self.play(Write(sourcePower), Write(sourcePowerLabel))
+        self.play(Write(wires))
+
+        self.wait(5)
 
 class MOSFETGraphsSmallSignalInputOutput(Scene):
 
@@ -621,3 +714,13 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
             graph.become(newInputSignalVgsGraph)
 
         inputSignalVgsGraph.add_updater(updateInputSignalVgsGraph)
+
+# connects circuit scene and graphing scene together
+class BuildMOSFETThenSmallSignal(Scene):
+    
+    def construct(self):
+        BuildMOSFETSymbol.construct(self)
+        BuildMOSFETSymbol.clear(self) #  clear for next scene
+
+        MOSFETGraphsSmallSignalInputOutput.construct(self)
+        MOSFETGraphsSmallSignalInputOutput.clear(self)
