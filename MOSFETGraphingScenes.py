@@ -120,7 +120,6 @@ class MOSFETGraphs(Scene):
 
         self.wait(5)
 
-
 class MOSFETGraphsSmallSignal(Scene):
     def construct(self):
         # set up time 
@@ -376,7 +375,7 @@ class BuildMOSFETSymbol(Scene):
         sourcePowerGroup = VGroup(sourcePower, sourcePowerLabel)
 
         # source to ground wire 
-        sourceToGroundWire = Line(sourceWireDown.get_end(), sourceWireDown.get_end()+DOWN*1)
+        sourceToGroundWire = Line(sourceWireDown.get_end(), sourceWireDown.get_end()+DOWN*1.65)
         # get source ground TODO make a ground mobject or something so this isn't duplicated
         sourceGroundTopRect = Rectangle(width=1, height=0.07, fill_opacity=1)
         sourceGroundMiddleRect = Rectangle(width=0.7, height=0.07, fill_opacity=1).move_to(DOWN*0.2)
@@ -403,6 +402,81 @@ class BuildMOSFETSymbol(Scene):
 
         self.wait(5)
 
+class BuildMOSFETSymbolCircuitKZ(Scene):
+    
+    def construct(self):
+        template = TexTemplate()
+        template.add_to_preamble(r"\usepackage[siunitx, RPvoltages, american]{circuitikz}")
+
+        """
+            \draw (0,0) node[nmos, anchor=G](nmos){};
+            \draw (0,0)
+            to[V,v=$V_d$] (0,-1.5);
+            \draw (0,-1.5)
+            to[short] (0,-3)
+
+        """
+        """
+            \draw (0,0) node[nmos, anchor=G](nmos){};
+            \draw (0,0)
+            to[V,v=$V_d$] (0,-1.5);
+            \draw (0,1.5)
+            to[short] (2,1.5)
+            to[C=$C$] (2,0)
+            to[short] (0,0);
+            \draw (2,1.5)
+            to[short] (4,-1.5)
+            to[R=$R$] (4,0)
+            to[short] (2,0);
+        """
+        """
+            \draw (0,0) node[nmos, anchor=G](nmos){};
+            \draw (0,0)
+            to[battery, invert, l_=$V_d$] (0,-1.5) -- (0, -2) node[ground]{};
+
+            \draw (nmos.gate) to[short, -o] ++(-1, 0);
+
+            \draw 
+                (nmos.drain) to[R=$10k\Omega$] ++(0, 1.5);
+
+            \draw
+                (nmos.drain) to[short, -o, l_=$V_{out}$] ++(1, 0);
+
+            \draw 
+                (nmos.source) -- ++(0, -0.5) node[ground]{};
+            
+            \draw (2,0) node[above] {$V_{aa}$} to [V, v=$\ $] (2,-2);
+        """,
+        circuit_allg = MathTex(
+            # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
+            r"""
+            \draw (0,0) node[nmos, anchor=G](nmos){};
+            \draw (0,0)
+            to[battery, invert, l_=$V_d$] (0,-1.5) -- (0, -2) node[ground]{};
+
+            \draw (nmos.gate) to[short, -o] ++(-1, 0) node[label={left:$v_{in}$}]{};
+
+            \draw 
+                (nmos.drain) to[R=$10k\Omega$] ++(0, 1.5) to[short, -o] ++(0, 0.5) node[label={above:$V_{aa}$}]{};
+
+            \draw
+                (nmos.drain) to[short, -o] ++(1, 0) node[label={right:$v_{out}$}]{};
+
+            \draw 
+                (nmos.source) -- ++(0, -0.5) node[ground]{};
+            
+            """,
+            stroke_width=2
+            , fill_opacity=0
+            , stroke_opacity=1
+            , tex_environment="circuitikz"
+            , tex_template=template
+            
+            )
+        circuit_allg.scale(0.5).move_to(ORIGIN)
+        self.play(Write(circuit_allg))
+        self.wait(3)
+        
 class MOSFETGraphsSmallSignalInputOutput(Scene):
 
     def construct(self):
