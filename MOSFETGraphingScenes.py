@@ -6,14 +6,14 @@ class BuildMOSFETCircuitSimple(Scene):
         template = TexTemplate()
         template.add_to_preamble(r"\usepackage[siunitx, RPvoltages, american]{circuitikz}")
         
-        circuit_allg = MathTex(
+        simpleMOSFET = MathTex(
             # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
             r"""\draw (0,0) node[nmos, anchor=G](nmos){};
 
-            \draw (nmos.gate) to[short, -o] ++(-1, 0) node[label={left:$V_{in}$}]{};
+            \draw (nmos.gate) to[short, -o] ++(-1, 0) node[label={left:$v_{in}$}]{};
 
             \draw
-                (nmos.drain) to[short, -o, i<=$I_{out}$] ++(1, 0) node[label={right:$I_{out}$}]{};
+                (nmos.drain) to[short, -o, i<=$I_{out}$] ++(1, 0) node[label={right:$i_{out}$}]{};
 
             \draw 
                 (nmos.source) -- ++(0, -0.25) node[ground]{};     
@@ -25,11 +25,35 @@ class BuildMOSFETCircuitSimple(Scene):
             , tex_environment="circuitikz"
             , tex_template=template     
             )
-        circuit_allg.scale(0.5).move_to(ORIGIN)
-        self.play(Write(circuit_allg))
+        simpleMOSFET.scale(0.5).move_to(ORIGIN)
+        self.play(Write(simpleMOSFET))
         self.wait(3)
 
-        # draw input signal?
+        simpleMOSFETWithResistor = MathTex(
+            # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
+            r"""\draw (0,0) node[nmos, anchor=G](nmos){};
+
+            \draw (nmos.gate) to[short] ++(-2, 0) node[label={left:$v_{in}$}]{};
+
+            \draw 
+                (nmos.drain) to[R=$R_{1}$] ++(0, 1.5) to[short, -o] ++(0, 0.5) node[label={above:$V_{aa}$}]{};
+
+            \draw
+                (nmos.drain) to[short] ++(2, 0) node[label={right:$v_{out}$}]{};
+
+            \draw 
+                (nmos.source) to[short, i>=$I_{aa}$] ++(0, -0.25) node[ground]{};     
+            """,
+            stroke_width=2
+            , fill_opacity=0
+            , stroke_opacity=1
+            , tex_environment="circuitikz"
+            , tex_template=template
+            
+            )
+        simpleMOSFETWithResistor.scale(0.5).move_to(ORIGIN+DOWN)
+
+        # draw input signal
         Vgs = lambda t: 2 + 0.05*np.sin(t)
         inputAxes = Axes(
             x_range=[0, 8, 1],
@@ -41,21 +65,23 @@ class BuildMOSFETCircuitSimple(Scene):
         )
         inputAxes.move_to(LEFT*3.5+UP*0.25).scale(0.4)
         inputSignal = inputAxes.plot(Vgs, color=BLUE)
+        inputGraph = VGroup(inputAxes, inputSignal)
         self.play(Write(inputAxes), Write(inputSignal))
         self.wait(3)
 
         # assuming sat, can write equation
-        satRegionText = Tex("Assuming that the MOSFET is in saturation (which we cannot for this oversimplied example), we have an equation for $I_{out}$")
+        satRegionText = Tex("Assuming that the MOSFET is in saturation, we have an equation for $I_{out}$")
         satRegionText.move_to(UP*3).scale(0.7)
         self.play(Write(satRegionText))
-        satEquation = MathTex("I_{DS}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "V_{GS}", "-V_{th})^{2}", color=RED_B)
+        satEquation = MathTex("i_{DS}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "V_{GS}", "-V_{th})^{2}", color=RED_B)
         satEquation.move_to(UP*2)
         self.play(Write(satEquation))
         equationRectangleVgs = SurroundingRectangle(satEquation[2], buff=0.1)
         self.play(Write(equationRectangleVgs))
         self.wait(0.5)
+
         # substitute V_in
-        satEquationVinCopy = MathTex("I_{DS}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "V_{IN}", "-V_{th})^{2}", color=RED_B) # TODO make this not just a copied duplicate but actually done properly
+        satEquationVinCopy = MathTex("i_{DS}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B) # TODO make this not just a copied duplicate but actually done properly
         satEquationVinCopy[2].set_color(color=BLUE)
         satEquationVinCopy.move_to(UP*2) # NOTE hardcoded movement to match the earlier equation
         self.play(ReplacementTransform(satEquation, satEquationVinCopy)) # NOTE settings are the same and hard coded
@@ -65,7 +91,7 @@ class BuildMOSFETCircuitSimple(Scene):
         self.play(ReplacementTransform(equationRectangleVgs,equationRectangleIds))
         self.wait(0.5)
         # TODO again make the copy nicer rather than hard coded
-        satEquationIoutCopy = MathTex("I_{out}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "V_{IN}", "-V_{th})^{2}", color=RED_B) # TODO make this not just a copied duplicate but actually done properly
+        satEquationIoutCopy = MathTex("i_{out}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B) # TODO make this not just a copied duplicate but actually done properly
         satEquationIoutCopy[0].set_color(color=BLUE)
         satEquationIoutCopy[2].set_color(color=BLUE)
         satEquationIoutCopy.move_to(UP*2) # NOTE hardcoded movement to match the earlier equation
@@ -73,6 +99,33 @@ class BuildMOSFETCircuitSimple(Scene):
         self.play(Unwrite(equationRectangleIds))
         self.wait(3)
 
+        # change to new circuit
+        satEquationIdsCopy = MathTex("i_{aa}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B) # TODO make this not just a copied duplicate but actually done properly
+        satEquationIdsCopy[0].set_color(color=BLUE)
+        satEquationIdsCopy[2].set_color(color=BLUE)
+        satEquationIdsCopy.move_to(UP*2) # NOTE hardcoded movement to match the earlier equation
+        self.play(ReplacementTransform(simpleMOSFET, simpleMOSFETWithResistor), 
+                  inputGraph.animate.move_to(LEFT*4.3 + DOWN*1.5),
+                  ReplacementTransform(satEquationIoutCopy, satEquationIdsCopy))
+        self.wait(3)
+
+        # doing a bunch of algebra for terms of vout
+
+        # replace Ids with ohms law
+        satEquationIdsReplacedCopy = MathTex(r"\frac{V_{aa}-v_{out}}{R_{1}}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B) # TODO make this not just a copied duplicate but actually done properly
+        satEquationIdsReplacedCopy.move_to(UP*2) # NOTE hardcoded movement to match the earlier equation
+        self.play(ReplacementTransform(satEquationIdsCopy, satEquationIdsReplacedCopy), run_time=1)
+        
+        satEquationIdsMultipliedByR1 = MathTex(r"V_{aa}-v_{out}", r"=R_{1}\cdot\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B)
+        satEquationIdsMultipliedByR1.move_to(UP*2) # NOTE hardcoded movement to match the earlier equation
+        self.play(ReplacementTransform(satEquationIdsReplacedCopy, satEquationIdsMultipliedByR1), run_time=1) # TODO fix rewriting bug
+
+        satEquationDone = MathTex(r"v_{out}", r"=V_{aa} - R_{1}\cdot\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B)
+        satEquationDone.move_to(UP*2)
+        self.play(ReplacementTransform(satEquationIdsMultipliedByR1, satEquationDone))
+        self.wait(5)
+
+        # move resistance value over 
 class MOSFETGraphsSmallSignalInputOutput(Scene):
 
     def construct(self):
