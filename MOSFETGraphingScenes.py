@@ -73,39 +73,6 @@ class BuildMOSFETCircuitSimple(Scene):
         self.play(Unwrite(equationRectangleIds))
         self.wait(3)
 
-class BuildMOSFETCircuitResistor(Scene):
-    
-    def construct(self):
-        template = TexTemplate()
-        template.add_to_preamble(r"\usepackage[siunitx, RPvoltages, american]{circuitikz}")
-
-        circuit_allg = MathTex(
-            # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
-            r"""\draw (0,0) node[nmos, anchor=G](nmos){};"""
-            r"""\draw (0,0) to[battery, invert, l_=$V_d$] (0,-1.5) -- (0, -2) node[ground]{};
-
-            \draw (nmos.gate) to[short] ++(-1, 0) to[C, l_=BIG, -o] ++(-1, 0) node[label={left:$v_{in}$}]{};
-
-            \draw 
-                (nmos.drain) to[R=$10k\Omega$] ++(0, 1.5) to[short, -o] ++(0, 0.5) node[label={above:$V_{aa}$}]{};
-
-            \draw
-                (nmos.drain) to[short] ++(1, 0) to[C, l^=BIG, -o] ++(1, 0) node[label={right:$v_{out}$}]{};
-
-            \draw 
-                (nmos.source) -- ++(0, -0.25) node[ground]{};     
-            """,
-            stroke_width=2
-            , fill_opacity=0
-            , stroke_opacity=1
-            , tex_environment="circuitikz"
-            , tex_template=template
-            
-            )
-        circuit_allg.scale(0.5).move_to(ORIGIN)
-        self.play(Write(circuit_allg))
-        self.wait(3)
-        
 class MOSFETGraphsSmallSignalInputOutput(Scene):
 
     def construct(self):
@@ -237,18 +204,18 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         # Vds shouldn't really vary, but if it does it is set up to be a function here
         # TODO double use of simTime.get_value in DrainSourceToCurrent is bad
         VdsOperatingPoint = ax2.coords_to_point(Vds(simTime.get_value()), DrainSourceToCurrent(Vds(simTime.get_value()), simTime.get_value())) # TODO organize these param numbers
-        VdsOperatingPointLine = ax2.get_vertical_line(VdsOperatingPoint, color=BLUE)
-        VdsOperationPointDot = Dot(VdsOperatingPoint, color=BLUE)
+        VdsOperatingPointLine = ax2.get_vertical_line(VdsOperatingPoint, color=GREEN)
+        VdsOperationPointDot = Dot(VdsOperatingPoint, color=GREEN)
 
         # updaters to move this dot up and down (and left and right if needed)
         def updateVdsOperatingPointLine(line):
             newVdsOperatingPoint = ax2.coords_to_point(Vds(simTime.get_value()), DrainSourceToCurrent(Vds(simTime.get_value()), simTime.get_value())) # TODO organize these param numbers
-            newVdsOperatingPointLine = ax2.get_vertical_line(newVdsOperatingPoint, color=BLUE)
+            newVdsOperatingPointLine = ax2.get_vertical_line(newVdsOperatingPoint, color=GREEN)
             line.become(newVdsOperatingPointLine)
 
         def updateVdsOperatingPointDot(dot):
             newVdsOperatingPoint = ax2.coords_to_point(Vds(simTime.get_value()), DrainSourceToCurrent(Vds(simTime.get_value()), simTime.get_value())) # TODO organize these param numbers
-            newVdsOperationPointDot = Dot(newVdsOperatingPoint, color=BLUE)
+            newVdsOperationPointDot = Dot(newVdsOperatingPoint, color=GREEN)
             dot.become(newVdsOperationPointDot)
 
         VdsOperatingPointLine.add_updater(updateVdsOperatingPointLine)
@@ -257,17 +224,17 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         # create dot for Vgs and move it with function given
         # Vgs operating point voltage is defined at the top
         VgsOperatingPoint = ax1.coords_to_point(Vgs(simTime.get_value()), GateSourceToSatCurrent(Vgs(simTime.get_value()))) # TODO organize these param numbers
-        VgsOperatingPointLine = ax1.get_vertical_line(VgsOperatingPoint, color=BLUE)
+        VgsOperatingPointLine = ax1.get_vertical_line(VgsOperatingPoint, color=RED)
         VgsOperatingPointDot = Dot(VgsOperatingPoint, color=BLUE)
 
         def updateVgsOperatingPointLine(line):
             newVgsOperatingPoint = ax1.coords_to_point(Vgs(simTime.get_value()), GateSourceToSatCurrent(Vgs(simTime.get_value())))
-            newVgsOperatingPointLine = ax1.get_vertical_line(newVgsOperatingPoint, color=BLUE)
+            newVgsOperatingPointLine = ax1.get_vertical_line(newVgsOperatingPoint, color=RED)
             line.become(newVgsOperatingPointLine)
 
         def updateVgsOperatingPointDot(dot):
             newVgsOperatingPoint = ax1.coords_to_point(Vgs(simTime.get_value()), GateSourceToSatCurrent(Vgs(simTime.get_value())))
-            newVgsOperatingPointDot = Dot(newVgsOperatingPoint, color=BLUE)
+            newVgsOperatingPointDot = Dot(newVgsOperatingPoint, color=RED)
             dot.become(newVgsOperatingPointDot)
 
         # moves point along with function and time
@@ -288,6 +255,9 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         drainSourceGraph.add_updater(updateDrainSourceGraph)
         gateSourceGraph.add_updater(updateGateSourceGraph)
 
+        # write text
+        smallChangeDescription = Text("A small change to the input will produce corresponding output change.").scale(0.4).move_to(UP*3)
+        self.play(Write(smallChangeDescription))
         # add dots
         self.play(
             Write(VgsOperatingPointLine), 
@@ -332,7 +302,6 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         # TODO potential reordering here? NOTE it actually worked changing it before playing because the update functions only work with the graphs
         # move plots 
         # TODO tinker with plot sizes so they can move up and out of the way for teh input and output signal to have enough space
-        # TODO this another wiggle is unneeded
 
         # add the little small signal graphs at the bottom that respond to wiggle as well
 
@@ -373,7 +342,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         # adding output graph 
         outputSignalAxes = Axes(
             x_range=[0, 10], # TODO set numbers
-            y_range=[0, 3], # TODO make it set dynamically
+            y_range=[0.5, 1.5, 0.2], # TODO make it set dynamically
             tips=False,
             axis_config={"include_numbers": True, "color": YELLOW},
             x_length=5,
@@ -385,17 +354,17 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
 
         outputSignalPoint = outputSignalAxes.coords_to_point(0, DrainSourceToCurrent(Vds(0), 0))
         outputSignalDot = Dot(outputSignalPoint, color=RED)
-        outputSignalLine = outputSignalAxes.get_vertical_line(outputSignalPoint, color=RED)
+        outputSignalLine = outputSignalAxes.get_vertical_line(outputSignalPoint, color=GREEN)
 
         # TODO make updaters not so redundant
         def updateOutputSignalDot(dot):
             newOutputSignalPoint = outputSignalAxes.coords_to_point(simTime.get_value(), DrainSourceToCurrent(Vds(simTime.get_value()), simTime.get_value()))
-            newOutputSignalDot = Dot(newOutputSignalPoint, color=RED)
+            newOutputSignalDot = Dot(newOutputSignalPoint, color=GREEN)
             dot.become(newOutputSignalDot)
 
         def updateOutputSignalLine(line):
             newOutputSignalPoint = outputSignalAxes.coords_to_point(simTime.get_value(), DrainSourceToCurrent(Vds(simTime.get_value()), simTime.get_value()))
-            newOutputSignalLine = outputSignalAxes.get_vertical_line(newOutputSignalPoint, color=RED)
+            newOutputSignalLine = outputSignalAxes.get_vertical_line(newOutputSignalPoint, color=GREEN)
             line.become(newOutputSignalLine)
         
         outputSignalDot.add_updater(updateOutputSignalDot)
@@ -403,9 +372,10 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         
         self.play(Write(outputSignalDot), Write(outputSignalLine))
         self.play(
-            ApplyMethod(simTime.increment_value, 8, rate_func=rate_functions.linear),
+            ApplyMethod(simTime.increment_value, 10, rate_func=rate_functions.linear),
             run_time=5,
         )
+        self.wait(1)
         simTime.set_value(0) # reset for playing again later
 
         # add updaters to the graphs so they go forward as inputs 
@@ -418,6 +388,73 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
 
         inputSignalVgsGraph.add_updater(updateInputSignalVgsGraph)
 
+class BuildMOSFETCircuitSimpleCommonSource(Scene):
+
+        
+    def construct(self):
+        template = TexTemplate()
+        template.add_to_preamble(r"\usepackage[siunitx, RPvoltages, american]{circuitikz}")
+
+        circuit_allg = MathTex(
+            # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
+            r"""\draw (0,0) node[nmos, anchor=G](nmos){};
+
+            \draw (nmos.gate) to[short] ++(-2, 0) node[label={left:$v_{in}$}]{};
+
+            \draw 
+                (nmos.drain) to[R=$10k\Omega$] ++(0, 1.5) to[short, -o] ++(0, 0.5) node[label={above:$V_{aa}$}]{};
+
+            \draw
+                (nmos.drain) to[short] ++(2, 0) node[label={right:$v_{out}$}]{};
+
+            \draw 
+                (nmos.source) -- ++(0, -0.25) node[ground]{};     
+            """,
+            stroke_width=2
+            , fill_opacity=0
+            , stroke_opacity=1
+            , tex_environment="circuitikz"
+            , tex_template=template
+            
+            )
+        circuit_allg.scale(0.5).move_to(ORIGIN)
+        self.play(Write(circuit_allg))
+        self.wait(3)
+        
+class BuildMOSFETCircuitCommonSourceDCOffsets(Scene):
+    
+    def construct(self):
+        template = TexTemplate()
+        template.add_to_preamble(r"\usepackage[siunitx, RPvoltages, american]{circuitikz}")
+
+        circuit_allg = MathTex(
+            # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
+            r"""\draw (0,0) node[nmos, anchor=G](nmos){};"""
+            r"""\draw (0,0) to[battery, invert, l_=$V_d$] (0,-1.5) -- (0, -2) node[ground]{};
+
+            \draw (nmos.gate) to[short] ++(-1, 0) to[C, l_=BIG, -o] ++(-1, 0) node[label={left:$v_{in}$}]{};
+
+            \draw 
+                (nmos.drain) to[R=$10k\Omega$] ++(0, 1.5) to[short, -o] ++(0, 0.5) node[label={above:$V_{aa}$}]{};
+
+            \draw
+                (nmos.drain) to[short] ++(1, 0) to[C, l^=BIG, -o] ++(1, 0) node[label={right:$v_{out}$}]{};
+
+            \draw 
+                (nmos.source) -- ++(0, -0.25) node[ground]{};     
+            """,
+            stroke_width=2
+            , fill_opacity=0
+            , stroke_opacity=1
+            , tex_environment="circuitikz"
+            , tex_template=template
+            
+            )
+        circuit_allg.scale(0.5).move_to(ORIGIN)
+        self.play(Write(circuit_allg))
+        self.wait(3)
+        
+        
 # connects circuit scene and graphing scene together
 class BuildMOSFETThenSmallSignal(Scene):
     
@@ -428,5 +465,8 @@ class BuildMOSFETThenSmallSignal(Scene):
         MOSFETGraphsSmallSignalInputOutput.construct(self)
         MOSFETGraphsSmallSignalInputOutput.clear(self)
 
-        BuildMOSFETCircuitResistor.construct(self)
-        BuildMOSFETCircuitResistor.clear(self) #  clear for next scene
+        BuildMOSFETCircuitSimpleCommonSource.construct(self)
+        BuildMOSFETCircuitSimpleCommonSource.clear(self)
+        
+        BuildMOSFETCircuitCommonSourceDCOffsets.construct(self)
+        BuildMOSFETCircuitCommonSourceDCOffsets.clear(self) #  clear for next scene
