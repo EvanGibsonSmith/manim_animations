@@ -167,7 +167,9 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
             y_length=4,
         )
         
-        ax1.move_to(LEFT*3)
+        ax1.move_to(LEFT*3) 
+        ax1XLabel = ax1.get_x_axis_label('V_{gs}').shift(DOWN*0.2)
+        ax1YLabel = ax1.get_y_axis_label('I_{sat}').shift(LEFT)
       
         # graphing parameters
         # get range of drain to source with params to plot properly
@@ -181,9 +183,12 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
             y_length=4,
         )
         ax2.move_to(RIGHT*3)
-
+        ax2XLabel = ax2.get_x_axis_label('V_{ds}').shift(DOWN*0.2)
+        ax2YLabel = ax2.get_y_axis_label('I_{ds}').shift(LEFT)
+      
         # write axes
-        self.play(Write(ax1), Write(ax2))
+        self.play(Write(ax1), Write(ax1XLabel), Write(ax1YLabel),
+                  Write(ax2), Write(ax2XLabel), Write(ax2YLabel))
         
         # TODO add stuff below
         gateSourceGraph = ax1.plot(lambda Vgs: GateSourceToSatCurrent(Vgs), x_range=[0, 3], color=WHITE)
@@ -309,7 +314,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         gateSourceGraph.add_updater(updateGateSourceGraph)
 
         # write text
-        smallChangeDescription = Text("A small change to the input will produce corresponding output change.").scale(0.4).move_to(UP*3)
+        smallChangeDescription = Text("A small change to the input will produce corresponding change in current.").scale(0.4).move_to(UP*3.5)
         self.play(Write(smallChangeDescription))
         # add dots
         self.play(
@@ -339,6 +344,8 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
             y_length=3,
         )
         newAx1.move_to(LEFT*3.5+UP*1.1)
+        newAx1XLabel = newAx1.get_x_axis_label('V_{gs}').scale(0.8).shift(DOWN*0.1)
+        newAx1YLabel = newAx1.get_y_axis_label('I_{sat}').shift(LEFT*0.5).scale(0.8)
 
         newAx2 = Axes(
             x_range=[0, 10, 2], # TODO set numbers
@@ -348,8 +355,17 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
             x_length=3,
             y_length=3,
         )
+
         newAx2.move_to(RIGHT*3+UP*1.1)
-        self.play(ax1.animate.become(newAx1), ax2.animate.become(newAx2))
+        newAx2XLabel = newAx2.get_x_axis_label('V_{ds}').shift(DOWN*0.1).scale(0.8)
+        newAx2YLabel = newAx2.get_y_axis_label('I_{ds}').shift(LEFT*0.5).scale(0.8)
+        self.play(ax1.animate.become(newAx1), 
+                  ax1XLabel.animate.become(newAx1XLabel),
+                  ax1YLabel.animate.become(newAx1YLabel), 
+                  ax2.animate.become(newAx2),
+                  ax2XLabel.animate.become(newAx2XLabel),
+                  ax2YLabel.animate.become(newAx2YLabel)
+                  )
 
         # TODO make setting up the responsive graphs a function that is done at the top so that they extra stuff can be compartimentalizse better
         # TODO potential reordering here? NOTE it actually worked changing it before playing because the update functions only work with the graphs
