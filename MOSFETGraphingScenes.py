@@ -99,6 +99,13 @@ class BuildMOSFETCircuitSimple(Scene):
         self.play(Unwrite(equationRectangleIds))
         self.wait(3)
 
+        # new text for Iout
+        IoutText = Tex("Adding a resistor, this $I_{out}$ can create an output voltage")
+        IoutText.move_to(UP*3).scale(0.7)
+        self.play(FadeOut(satRegionText))
+        self.play(Write(IoutText))
+        self.wait(2)
+
         # change to new circuit
         satEquationIdsCopy = MathTex("i_{aa}", r"=\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B) # TODO make this not just a copied duplicate but actually done properly
         satEquationIdsCopy[0].set_color(color=BLUE)
@@ -107,7 +114,8 @@ class BuildMOSFETCircuitSimple(Scene):
         self.play(ReplacementTransform(simpleMOSFET, simpleMOSFETWithResistor), 
                   inputGraph.animate.move_to(LEFT*4.3 + DOWN*1.5),
                   ReplacementTransform(satEquationIoutCopy, satEquationIdsCopy))
-        self.wait(3)
+        self.wait(2)
+
 
         # doing a bunch of algebra for terms of vout
 
@@ -120,12 +128,22 @@ class BuildMOSFETCircuitSimple(Scene):
         satEquationIdsMultipliedByR1.move_to(UP*2) # NOTE hardcoded movement to match the earlier equation
         self.play(ReplacementTransform(satEquationIdsReplacedCopy, satEquationIdsMultipliedByR1), run_time=1) # TODO fix rewriting bug
 
-        satEquationDone = MathTex(r"v_{out}", r"=V_{aa} - R_{1}\cdot\frac{1}{2}k'\frac{W}{L}\cdot(", "v_{in}", "-V_{th})^{2}", color=RED_B)
+        satEquationDone = MathTex(r"v_{out}=", r"V_{aa}", r"-", r"R_{1}", r"\cdot", r"\frac{1}{2}k'\frac{W}{L}", r"\cdot", "(v_{in}-", "V_{th}", ")^{2}", color=RED_B)
         satEquationDone.move_to(UP*2)
         self.play(ReplacementTransform(satEquationIdsMultipliedByR1, satEquationDone))
+        self.wait(2)
+        
+        # new text
+        constantInfoText = Tex("Everything in blue is just a constant.")
+        constantInfoText.move_to(UP*3).scale(0.7)
+        self.play(FadeOut(IoutText))
+        self.play(Write(constantInfoText),
+                  satEquationDone[1].animate.set_color(BLUE_B), 
+                  satEquationDone[3].animate.set_color(BLUE_B),
+                  satEquationDone[5].animate.set_color(BLUE_B),
+                  satEquationDone[8].animate.set_color(BLUE_B))
         self.wait(5)
 
-        # move resistance value over 
 class MOSFETGraphsSmallSignalInputOutput(Scene):
 
     def construct(self):
@@ -133,7 +151,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         simTime = ValueTracker(0) # NOTE: Can probably use manim's built in move along path for some of the uses of this
 
         # set parameters
-        kPrimeWL = 1 # TODO make a realistic value
+        kPrimeWL = 2 # TODO make a realistic value
         Vth = 0.6
         
         # set parameters that are functions
@@ -168,7 +186,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         )
         
         ax1.move_to(LEFT*3) 
-        ax1XLabel = ax1.get_x_axis_label('V_{gs}').shift(DOWN*0.2)
+        ax1XLabel = ax1.get_x_axis_label('V_{gs}').shift(DOWN*0.2).set_color(RED_B) # indicate as input
         ax1YLabel = ax1.get_y_axis_label('I_{sat}').shift(LEFT)
       
         # graphing parameters
@@ -184,7 +202,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         )
         ax2.move_to(RIGHT*3)
         ax2XLabel = ax2.get_x_axis_label('V_{ds}').shift(DOWN*0.2)
-        ax2YLabel = ax2.get_y_axis_label('I_{ds}').shift(LEFT)
+        ax2YLabel = ax2.get_y_axis_label('I_{ds}').shift(LEFT).set_color(RED_B) # indicate as output
       
         # write axes
         self.play(Write(ax1), Write(ax1XLabel), Write(ax1YLabel),
@@ -314,7 +332,12 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         gateSourceGraph.add_updater(updateGateSourceGraph)
 
         # write text
-        smallChangeDescription = Text("A small change to the input will produce corresponding change in current.").scale(0.4).move_to(UP*3.5)
+        # Split the text into substrings
+        smallChangeDescription = Tex(r"A small change to the input (", r"$V_{gs}$", r") will produce corresponding change in current (" ,r"$I_{ds}$", r").", color=WHITE).move_to(UP*3.5).scale(0.7)
+
+        smallChangeDescription[1].set_color(RED_B)
+        smallChangeDescription[3].set_color(RED_B)
+
         self.play(Write(smallChangeDescription))
         # add dots
         self.play(
@@ -344,8 +367,8 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
             y_length=3,
         )
         newAx1.move_to(LEFT*3.5+UP*1.1)
-        newAx1XLabel = newAx1.get_x_axis_label('V_{gs}').scale(0.8).shift(DOWN*0.1)
-        newAx1YLabel = newAx1.get_y_axis_label('I_{sat}').shift(LEFT*0.5).scale(0.8)
+        newAx1XLabel = newAx1.get_x_axis_label('V_{gs}').scale(0.8).shift(DOWN*0.1).set_color(RED_B)
+        newAx1YLabel = newAx1.get_y_axis_label('I_{sat}').shift(LEFT*0.5).scale(0.8).set_color(RED_B)
 
         newAx2 = Axes(
             x_range=[0, 10, 2], # TODO set numbers
@@ -358,7 +381,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
 
         newAx2.move_to(RIGHT*3+UP*1.1)
         newAx2XLabel = newAx2.get_x_axis_label('V_{ds}').shift(DOWN*0.1).scale(0.8)
-        newAx2YLabel = newAx2.get_y_axis_label('I_{ds}').shift(LEFT*0.5).scale(0.8)
+        newAx2YLabel = newAx2.get_y_axis_label('I_{ds}').shift(LEFT*0.5).scale(0.8).set_color(RED_B)
         self.play(ax1.animate.become(newAx1), 
                   ax1XLabel.animate.become(newAx1XLabel),
                   ax1YLabel.animate.become(newAx1YLabel), 
@@ -411,7 +434,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         # adding output graph 
         outputSignalAxes = Axes(
             x_range=[0, 10], # TODO set numbers
-            y_range=[0.5, 1.5, 0.2], # TODO make it set dynamically
+            y_range=[1.7, 2.3, 0.1], # TODO make it set dynamically
             tips=False,
             axis_config={"include_numbers": True, "color": YELLOW},
             x_length=5,
@@ -456,14 +479,13 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
             graph.become(newInputSignalVgsGraph)
 
         inputSignalVgsGraph.add_updater(updateInputSignalVgsGraph)
-
-class BuildMOSFETCircuitSimpleCommonSource(Scene):
-
         
+class BuildMOSFETCircuitCommonSourceDCOffsets(Scene):
+    
     def construct(self):
         template = TexTemplate()
         template.add_to_preamble(r"\usepackage[siunitx, RPvoltages, american]{circuitikz}")
-
+  
         circuit_allg = MathTex(
             # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
             r"""\draw (0,0) node[nmos, anchor=G](nmos){};
@@ -489,14 +511,8 @@ class BuildMOSFETCircuitSimpleCommonSource(Scene):
         circuit_allg.scale(0.5).move_to(ORIGIN)
         self.play(Write(circuit_allg))
         self.wait(3)
-        
-class BuildMOSFETCircuitCommonSourceDCOffsets(Scene):
     
-    def construct(self):
-        template = TexTemplate()
-        template.add_to_preamble(r"\usepackage[siunitx, RPvoltages, american]{circuitikz}")
-
-        circuit_allg = MathTex(
+        circuit_allg_dc = MathTex(
             # docs https://texdoc.org/serve/circuitikzmanual.pdf/0
             r"""\draw (0,0) node[nmos, anchor=G](nmos){};"""
             r"""\draw (0,0) to[battery, invert, l_=$V_d$] (0,-1.5) -- (0, -2) node[ground]{};
@@ -517,12 +533,19 @@ class BuildMOSFETCircuitCommonSourceDCOffsets(Scene):
             , stroke_opacity=1
             , tex_environment="circuitikz"
             , tex_template=template
-            
             )
-        circuit_allg.scale(0.5).move_to(ORIGIN)
-        self.play(Write(circuit_allg))
-        self.wait(3)
+        circuit_allg_dc.scale(0.5).move_to(ORIGIN)
         
+        DCOffsetInfoLine1 = Text("In practice, we must have a DC offset at the gate")
+        DCOffsetInfoLine2 = Text(" to actually remain in saturation, which before we were assuming was the case.")
+        DCOffsetInfo = VGroup(DCOffsetInfoLine1, DCOffsetInfoLine2)
+        DCOffsetInfo.arrange(DOWN, buff=0.5)
+        DCOffsetInfo.scale(0.4).move_to(UP*3.5)
+        DCOffsetHighlightRectangle = Rectangle(height=4, width=2, color=RED_B).scale(0.6).move_to(ORIGIN+0.5*LEFT+DOWN)
+        self.play(ReplacementTransform(circuit_allg, circuit_allg_dc), Write(DCOffsetInfo), run_time=1)  
+        self.play(FadeIn(DCOffsetHighlightRectangle))   
+        self.play(Shake(DCOffsetHighlightRectangle))   
+        self.wait(3)   
         
 # connects circuit scene and graphing scene together
 class BuildMOSFETThenSmallSignal(Scene):
@@ -534,8 +557,5 @@ class BuildMOSFETThenSmallSignal(Scene):
         MOSFETGraphsSmallSignalInputOutput.construct(self)
         MOSFETGraphsSmallSignalInputOutput.clear(self)
 
-        BuildMOSFETCircuitSimpleCommonSource.construct(self)
-        BuildMOSFETCircuitSimpleCommonSource.clear(self)
-        
         BuildMOSFETCircuitCommonSourceDCOffsets.construct(self)
         BuildMOSFETCircuitCommonSourceDCOffsets.clear(self) #  clear for next scene
