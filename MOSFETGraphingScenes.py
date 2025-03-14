@@ -136,12 +136,23 @@ class BuildMOSFETCircuitSimple(Scene):
         # new text
         constantInfoText = Tex("Everything in blue is just a constant.")
         constantInfoText.move_to(UP*3).scale(0.7)
+
         self.play(FadeOut(IoutText))
         self.play(Write(constantInfoText),
                   satEquationDone[1].animate.set_color(BLUE_B), 
                   satEquationDone[3].animate.set_color(BLUE_B),
                   satEquationDone[5].animate.set_color(BLUE_B),
                   satEquationDone[8].animate.set_color(BLUE_B))
+        self.wait(3)
+        
+        quadInfoTextLine1 = Tex("Note that the relationship between $v_{in}$ and $v_{out}$ is quadratic.")
+        quadInfoTextLine2 = Tex("This nonlinearity has little effect if the change in $v_{in}$ over time is very small.")
+        quadInfoText = VGroup(quadInfoTextLine1, quadInfoTextLine2)
+        quadInfoText.arrange(DOWN, buff=0.5)
+        quadInfoText.scale(0.7).move_to(UP*3.5)
+
+        self.remove(constantInfoText) # remove text to replace with quadratic comment
+        self.play(Write(quadInfoText), run_time=2)
         self.wait(5)
 
 class MOSFETGraphsSmallSignalInputOutput(Scene):
@@ -368,7 +379,7 @@ class MOSFETGraphsSmallSignalInputOutput(Scene):
         )
         newAx1.move_to(LEFT*3.5+UP*1.1)
         newAx1XLabel = newAx1.get_x_axis_label('V_{gs}').scale(0.8).shift(DOWN*0.1).set_color(RED_B)
-        newAx1YLabel = newAx1.get_y_axis_label('I_{sat}').shift(LEFT*0.5).scale(0.8).set_color(RED_B)
+        newAx1YLabel = newAx1.get_y_axis_label('I_{sat}').shift(LEFT*0.5).scale(0.8)
 
         newAx2 = Axes(
             x_range=[0, 10, 2], # TODO set numbers
@@ -544,7 +555,6 @@ class BuildMOSFETCircuitCommonSourceDCOffsets(Scene):
         DCOffsetHighlightRectangle = Rectangle(height=4, width=2, color=RED_B).scale(0.6).move_to(ORIGIN+0.5*LEFT+DOWN)
         self.play(ReplacementTransform(circuit_allg, circuit_allg_dc), Write(DCOffsetInfo), run_time=1)  
         self.play(FadeIn(DCOffsetHighlightRectangle))   
-        self.play(Shake(DCOffsetHighlightRectangle))   
         self.wait(3)   
         
 # connects circuit scene and graphing scene together
