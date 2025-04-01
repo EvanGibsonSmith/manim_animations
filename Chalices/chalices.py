@@ -253,11 +253,6 @@ class CupDropAnimation(Scene):
         text = Text("Red in second cup, blue in first").scale(0.5).shift(UP*2)
         self.play(FadeIn(text))
         pellets_group = self.give_example(cups_horizontal_locations, indexes=[1, 0], pellet_colors=[RED, BLUE])
-        self.play(FadeOut(text), FadeOut(pellets_group))
-
-        text = Text("What happens as the number of cups changes?").scale(0.5).shift(UP*2)
-        self.play(FadeIn(text))
-        self.wait(3)
         self.play(FadeOut(text, pellets_group, cup_0_skull_bones, cup_1_skull_bones))
 
         # Symmetry
